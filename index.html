@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Audio — From Vibration to Digital Sound</title>
+<style>
+/* ============================================================
+   AUDIO — presentation
+   Dark tech theme, 16:9 fixed stage scaled to any screen
+   ============================================================ */
+
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:#05070f}
+body{
+  font-family:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  color:#eaf0ff;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ---------- stage ---------- */
+#viewport{
+  position:fixed;inset:0;overflow:hidden;
+  background:
+    radial-gradient(1200px 700px at 12% -10%, #14224a 0%, transparent 60%),
+    radial-gradient(900px 600px at 105% 110%, #2a1244 0%, transparent 60%),
+    #05070f;
+}
+#stage{
+  position:absolute;left:50%;top:50%;
+  transform:translate(-50%,-50%) scale(1);
+  transform-origin:center center;
+  background:linear-gradient(155deg,#080d1c 0%,#0b1226 45%,#0a0f20 100%);
+  overflow:hidden;
+}
+/* the 16:9 design box, centred inside whatever shape the screen has */
+#canvas{
+  position:absolute;left:50%;top:50%;width:1280px;height:720px;
+  transform:translate(-50%,-50%);z-index:1;
+}
+
+/* full-bleed photo backdrops: oversized so they always reach the screen edges */
+.bleed{position:absolute;left:-150%;top:-150%;width:400%;height:400%;z-index:0;pointer-events:none;overflow:hidden}
+.bleed img{width:100%;height:100%;object-fit:cover;display:block}
+.bleed::after{content:"";position:absolute;inset:0;background:var(--tint,rgba(6,10,22,.62))}
+.canvasov{
+  position:absolute;left:50%;top:50%;width:1280px;height:720px;transform:translate(-50%,-50%);
+  z-index:0;pointer-events:none;background:var(--grad,none);
+}
+
+/* ---------- slides ---------- */
+.slide{
+  position:absolute;inset:0;
+  padding:56px 66px 74px;
+  display:none;flex-direction:column;
+  opacity:0;
+}
+.slide.is-active{display:flex;animation:slideIn .5s cubic-bezier(.22,.9,.3,1) forwards}
+@keyframes slideIn{from{opacity:0;transform:translateY(16px) scale(.995)}to{opacity:1;transform:none}}
+.slide.is-active.back{animation:slideBack .5s cubic-bezier(.22,.9,.3,1) forwards}
+@keyframes slideBack{from{opacity:0;transform:translateY(-16px) scale(.995)}to{opacity:1;transform:none}}
+
+/* ambient waveform on every slide */
+.bg-wave{position:absolute;left:0;right:0;bottom:-40px;height:260px;opacity:.10;pointer-events:none;z-index:0}
+.bg-wave svg{width:200%;height:100%}
+.bg-wave .w1{animation:drift 26s linear infinite}
+.bg-wave .w2{animation:drift 38s linear infinite reverse}
+@keyframes drift{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.slide > *{position:relative;z-index:1}
+.slide > .bleed,.slide > .canvasov{position:absolute;z-index:0}
+
+/* ---------- typography ---------- */
+.kicker{
+  font-size:14px;letter-spacing:.24em;text-transform:uppercase;font-weight:700;
+  color:#6fe3ff;margin-bottom:14px;display:flex;align-items:center;gap:12px;
+}
+.kicker::before{content:"";width:34px;height:3px;border-radius:2px;background:linear-gradient(90deg,#22d3ee,#a78bfa)}
+h1{font-size:96px;line-height:.95;letter-spacing:-.03em;font-weight:800}
+h2{font-size:52px;line-height:1.04;letter-spacing:-.025em;font-weight:800}
+h2 .yr{color:#6fe3ff}
+h3{font-size:25px;font-weight:700;letter-spacing:-.01em}
+.lead{font-size:23px;line-height:1.5;color:#c9d6f2}
+p{font-size:20px;line-height:1.55;color:#c2cfe9}
+strong{color:#fff;font-weight:700}
+em{color:#6fe3ff;font-style:normal;font-weight:600}
+.muted{color:#8ea0c4}
+
+/* ---------- layout helpers ---------- */
+.cols{display:grid;gap:44px;align-items:center;flex:1;min-height:0}
+.c-6-6{grid-template-columns:1fr 1fr}
+.c-7-5{grid-template-columns:1.15fr .85fr}
+.c-5-7{grid-template-columns:.85fr 1.15fr}
+.c-6-5{grid-template-columns:1fr .82fr}
+.stack{display:flex;flex-direction:column;gap:18px}
+
+/* ---------- lists ---------- */
+.bul{list-style:none;display:flex;flex-direction:column;gap:15px}
+.bul li{
+  position:relative;padding-left:38px;font-size:20px;line-height:1.5;color:#c2cfe9;
+}
+.bul li::before{
+  content:"";position:absolute;left:6px;top:11px;width:11px;height:11px;border-radius:50%;
+  background:#22d3ee;box-shadow:0 0 0 5px rgba(34,211,238,.16);
+}
+.bul li b{color:#fff;font-weight:700}
+.bul.num{counter-reset:n}
+.bul.num li{padding-left:52px}
+.bul.num li::before{
+  counter-increment:n;content:counter(n);
+  width:30px;height:30px;top:2px;left:0;border-radius:9px;background:rgba(34,211,238,.13);
+  color:#6fe3ff;font-size:15px;font-weight:800;display:grid;place-items:center;
+  box-shadow:inset 0 0 0 1px rgba(34,211,238,.35);box-shadow:none;
+}
+
+/* ---------- figures ---------- */
+.fig{
+  position:relative;border-radius:16px;overflow:hidden;
+  box-shadow:0 26px 60px rgba(0,0,0,.55);
+  max-height:100%;
+}
+.fig img{display:block;width:100%;height:100%;object-fit:cover}
+.fig.fit img{object-fit:contain}
+.fig--dark{background:#0b1020;border:1px solid rgba(255,255,255,.10)}
+/* white / paper sources get a paper card */
+.fig--paper{background:#f4f1e9;padding:14px;border:1px solid rgba(255,255,255,.14)}
+.fig--archive img{filter:sepia(.22) contrast(1.05) saturate(.95)}
+.fig--dark img{filter:brightness(.94) contrast(1.06)}
+.cap{
+  margin-top:12px;font-size:14px;color:#7f90b4;line-height:1.4;letter-spacing:.01em
+}
+.cap b{color:#a9badb;font-weight:600}
+
+/* ---------- cards ---------- */
+.cards{display:grid;gap:20px;flex:1;min-height:0}
+.g2{grid-template-columns:1fr 1fr}
+.g4{grid-template-columns:repeat(2,1fr);grid-template-rows:1fr 1fr}
+.g5{grid-template-columns:repeat(3,1fr);grid-template-rows:1fr 1fr}
+.g5 .wide{grid-column:span 3}
+.card{
+  background:linear-gradient(160deg,rgba(255,255,255,.075),rgba(255,255,255,.022));
+  border:1px solid rgba(255,255,255,.10);border-radius:16px;
+  padding:22px 24px;display:flex;gap:16px;align-items:flex-start;
+  backdrop-filter:blur(6px);
+}
+.card .ic{
+  flex:none;width:46px;height:46px;border-radius:12px;display:grid;place-items:center;
+  background:rgba(34,211,238,.12);box-shadow:inset 0 0 0 1px rgba(34,211,238,.3);
+  color:#6fe3ff;
+}
+.card .ic svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.card h4{font-size:20px;font-weight:700;margin-bottom:6px;color:#fff}
+.card p{font-size:16.5px;line-height:1.45;color:#a9badb}
+/* slide 19: five cards, balanced 3 + 2 */
+.cards.s19{grid-template-columns:repeat(6,1fr);grid-auto-rows:min-content;gap:20px;align-content:center}
+.cards.s19 .card:nth-child(-n+3){grid-column:span 2}
+.cards.s19 .card:nth-child(n+4){grid-column:span 3}
+
+.card .n{
+  flex:none;width:38px;height:38px;border-radius:11px;display:grid;place-items:center;
+  font-size:17px;font-weight:800;color:#0a1020;background:linear-gradient(140deg,#6fe3ff,#a78bfa);
+}
+
+/* ---------- chips ---------- */
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{
+  font-size:16px;padding:8px 15px;border-radius:999px;font-weight:600;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.13);color:#cfdcf6;
+}
+.chip.c{background:rgba(34,211,238,.12);border-color:rgba(34,211,238,.32);color:#8fecff}
+.chip.v{background:rgba(167,139,250,.13);border-color:rgba(167,139,250,.33);color:#cbbcff}
+.chip.a{background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.32);color:#ffd980}
+
+/* ---------- timeline ---------- */
+.tl{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;position:relative;margin-top:6px}
+.tl::before{
+  content:"";position:absolute;left:2%;right:2%;top:9px;height:2px;
+  background:linear-gradient(90deg,#22d3ee,#a78bfa,#f472b6,#fbbf24);opacity:.5;border-radius:2px;
+}
+.tl .ev{position:relative;padding-top:30px}
+.tl .ev::before{
+  content:"";position:absolute;left:6px;top:3px;width:15px;height:15px;border-radius:50%;
+  background:#0b1226;border:3px solid #6fe3ff;box-shadow:0 0 0 4px rgba(34,211,238,.12);
+}
+.tl .ev b{display:block;font-size:18px;color:#fff;margin-bottom:3px}
+.tl .ev span{font-size:15px;color:#8ea0c4;line-height:1.35;display:block}
+
+/* ---------- device card (history) ---------- */
+.dev{
+  background:linear-gradient(150deg,rgba(34,211,238,.11),rgba(167,139,250,.05));
+  border:1px solid rgba(111,227,255,.24);border-radius:16px;padding:18px 22px;
+}
+.dev .lbl{
+  font-size:12.5px;letter-spacing:.2em;text-transform:uppercase;font-weight:800;color:#6fe3ff;margin-bottom:8px
+}
+.dev p{font-size:17.5px;line-height:1.45;color:#cfdcf6}
+.dev.warn{background:linear-gradient(150deg,rgba(251,191,36,.12),rgba(251,191,36,.03));border-color:rgba(251,191,36,.3)}
+.dev.warn .lbl{color:#ffd980}
+.dev.good{background:linear-gradient(150deg,rgba(52,211,153,.11),rgba(52,211,153,.03));border-color:rgba(52,211,153,.3)}
+.dev.good .lbl{color:#6ee7b7}
+
+/* history slides: 2 x 2 card grid so nothing ever overflows */
+.devgrid{display:grid;grid-template-columns:1fr 1fr;gap:13px;align-content:center;height:100%}
+.devgrid .dev{padding:15px 17px}
+.devgrid .lbl{font-size:11.5px;margin-bottom:6px;letter-spacing:.18em}
+.devgrid p{font-size:15.5px;line-height:1.42}
+.devgrid .span2{grid-column:span 2}
+.devgrid + .chips{margin-top:14px}
+
+/* ---------- title slide ---------- */
+#s1{justify-content:center;padding:0 96px}
+#s1 .body{position:relative;z-index:2;max-width:720px}
+#s1 h1{
+  background:linear-gradient(100deg,#fff 20%,#6fe3ff 60%,#a78bfa 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+#s1 .rule{width:96px;height:5px;border-radius:3px;background:linear-gradient(90deg,#22d3ee,#a78bfa);margin:26px 0}
+#s1 .meta{position:absolute;left:96px;bottom:62px;z-index:2;font-size:15px;color:#8ea0c4;letter-spacing:.04em}
+
+/* ---------- divider slide ---------- */
+.divider{justify-content:center}
+
+/* ---------- compare table ---------- */
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.vs .side{border-radius:16px;padding:20px 22px;border:1px solid rgba(255,255,255,.11);background:rgba(255,255,255,.04)}
+.vs .side.a{background:linear-gradient(160deg,rgba(251,191,36,.11),rgba(255,255,255,.02));border-color:rgba(251,191,36,.28)}
+.vs .side.d{background:linear-gradient(160deg,rgba(34,211,238,.11),rgba(255,255,255,.02));border-color:rgba(34,211,238,.28)}
+.vs h4{font-size:21px;margin-bottom:10px}
+.vs .side.a h4{color:#ffd980}
+.vs .side.d h4{color:#6fe3ff}
+.vs p{font-size:17px;line-height:1.45;color:#b9c7e2}
+.fmts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.fmt{font-size:14px;font-weight:700;padding:5px 11px;border-radius:8px;background:rgba(255,255,255,.08);color:#dbe6fb}
+
+/* ---------- progress ---------- */
+#bar{position:absolute;left:0;top:0;height:3px;z-index:30;background:linear-gradient(90deg,#22d3ee,#a78bfa);transition:width .35s ease;border-radius:0 2px 2px 0}
+#zbadge{
+  position:absolute;right:24px;top:22px;z-index:45;
+  font:700 14px/1 ui-monospace,"Cascadia Mono",Consolas,monospace;color:#a9badb;
+  background:rgba(12,18,36,.85);border:1px solid rgba(255,255,255,.13);
+  padding:9px 14px;border-radius:999px;opacity:0;transition:opacity .4s;pointer-events:none;
+}
+#zbadge.on{opacity:1}
+#zbadge b{color:#6fe3ff}
+
+#brand{position:absolute;left:66px;bottom:26px;z-index:5;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:#54658a;font-weight:700}
+
+/* ---------- click zones ---------- */
+.zone{position:absolute;top:0;bottom:0;width:17%;z-index:20;cursor:pointer;display:grid;place-items:center;opacity:0;transition:opacity .2s}
+.zone.l{left:0}
+.zone.r{right:0}
+.zone:hover{opacity:1}
+.zone svg{width:34px;height:34px;stroke:#6fe3ff;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 10px rgba(34,211,238,.7))}
+
+/* ---------- control panel ---------- */
+#panel{
+  position:absolute;left:50%;bottom:18px;transform:translateX(-50%) translateY(0);z-index:40;
+  display:flex;align-items:center;gap:6px;padding:7px 9px;border-radius:999px;
+  background:rgba(12,18,36,.82);border:1px solid rgba(255,255,255,.14);
+  box-shadow:0 14px 40px rgba(0,0,0,.55);backdrop-filter:blur(14px);
+  transition:opacity .45s ease, transform .45s ease;
+}
+#panel.is-hidden{opacity:0;transform:translateX(-50%) translateY(22px);pointer-events:none}
+#panel button{
+  appearance:none;border:0;background:transparent;color:#cfdcf6;cursor:pointer;
+  font:600 15px/1 "Segoe UI",system-ui,sans-serif;
+  height:36px;min-width:36px;padding:0 11px;border-radius:999px;
+  display:grid;place-items:center;transition:background .16s,color .16s;
+}
+#panel button:hover{background:rgba(255,255,255,.12);color:#fff}
+#panel button svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+#panel .sep{width:1px;height:20px;background:rgba(255,255,255,.16);margin:0 3px}
+#counter{
+  font:700 15px/1 ui-monospace,"Cascadia Mono",Consolas,monospace;color:#fff;
+  letter-spacing:.06em;padding:0 6px;min-width:74px;text-align:center;cursor:pointer;
+}
+#counter small{color:#7b8cb0;font-weight:600}
+
+
+/* ---------- overview ---------- */
+#ov{
+  position:absolute;inset:0;z-index:60;display:none;flex-direction:column;
+  background:rgba(5,8,18,.96);backdrop-filter:blur(8px);padding:44px 56px;
+}
+#ov.on{display:flex}
+#ov h3{font-size:26px;margin-bottom:6px}
+#ov .sub{font-size:15px;color:#7f90b4;margin-bottom:24px}
+#ovgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;overflow:auto;align-content:start}
+.ovc{
+  text-align:left;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+  border-radius:12px;padding:13px 15px;cursor:pointer;color:#dbe6fb;
+  font:600 15px/1.3 "Segoe UI",system-ui,sans-serif;transition:.15s;min-height:78px;
+  display:flex;flex-direction:column;gap:6px;
+}
+.ovc:hover{background:rgba(34,211,238,.14);border-color:rgba(34,211,238,.4);transform:translateY(-2px)}
+.ovc.cur{background:rgba(34,211,238,.2);border-color:#6fe3ff}
+.ovc i{font-style:normal;font-size:12px;color:#6fe3ff;font-weight:800;letter-spacing:.1em}
+.ovc span{color:#9fb0d0;font-weight:500;font-size:14px}
+
+@media print{
+  html,body{overflow:visible;background:#fff}
+  #stage{transform:none!important;box-shadow:none}
+  .slide{display:flex!important;position:relative;page-break-after:always;height:720px}
+  #panel,.zone,#brand,#bar,#ov{display:none!important}
+}
+</style>
+</head>
+<body>
+
+<div id="viewport">
+<div id="stage">
+  <div id="bar"></div>
+  <div id="brand">Audio · Sound Technology</div>
+
+  <div id="canvas">
+  <!-- ==================== SLIDES ==================== -->
+
+  <!-- 1 ─────────────────────────────── -->
+  <section class="slide" id="s1" data-title="Title">
+    <div class="bleed" style="--tint:rgba(5,8,18,.74)"><img src="img/hero-vinyl.jpg" alt="Vinyl record" style="opacity:.34;filter:grayscale(.35) contrast(1.05)"></div>
+    <div class="canvasov" style="--grad:linear-gradient(90deg,rgba(5,8,18,.96) 0%,rgba(6,10,22,.86) 45%,rgba(8,12,28,.55) 100%)"></div>
+    <div class="body">
+      <div class="kicker">Sound Technology</div>
+      <h1>AUDIO</h1>
+      <div class="rule"></div>
+      <p class="lead" style="font-size:26px">From the <b>phonautograph</b> of 1857 to the music<br>we stream today — how we hear, record and share sound.</p>
+      <div class="chips" style="margin-top:30px">
+        <span class="chip c">What is audio</span>
+        <span class="chip v">History</span>
+        <span class="chip a">Benefits</span>
+        <span class="chip">Student practice</span>
+      </div>
+    </div>
+    <div class="meta">20 slides · press <b>→</b> to begin</div>
+  </section>
+
+  <!-- 2 ─────────────────────────────── -->
+  <section class="slide" data-title="What is Audio?">
+    <div class="kicker">Definition</div>
+    <h2>What is <span class="yr">Audio</span>?</h2>
+    <div class="cols c-6-6">
+      <div class="stack">
+        <p class="lead">Audio is a form of <b>information</b> that is represented and transmitted through <b>sound</b>.</p>
+        <div class="chips">
+          <span class="chip c">Speech</span><span class="chip c">Music</span>
+          <span class="chip c">Podcasts</span><span class="chip c">Interviews</span>
+          <span class="chip c">Sound effects</span><span class="chip c">Audiobooks</span>
+        </div>
+        <p>Audio lets people pass on information <b>without written text or images</b> — we simply listen.</p>
+      </div>
+      <div>
+        <figure class="fig fig--dark" style="height:392px">
+          <img src="img/mic-studio.jpg" alt="Studio microphone with pop shield">
+        </figure>
+        <p class="cap"><b>The microphone</b> is the most common way to turn sound into a signal we can store.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 ─────────────────────────────── -->
+  <section class="slide" data-title="How we hear sound">
+    <div class="kicker">Physics</div>
+    <h2>How do we <span class="yr">hear</span> sound?</h2>
+    <div class="cols c-6-6">
+      <div>
+        <p class="lead" style="margin-bottom:22px">Sound is created when an object <b>vibrates</b>. It is a physical wave — and it needs a <b>medium</b>, usually air, to travel.</p>
+        <ul class="bul">
+          <li>An object <b>vibrates</b> and pushes the air around it.</li>
+          <li>The vibration spreads through the air as a <b>sound wave</b>.</li>
+          <li>The wave reaches our ear and makes the <b>eardrum vibrate</b>.</li>
+          <li>The brain processes those vibrations and recognises them as <b>sound</b>.</li>
+        </ul>
+      </div>
+      <div>
+        <figure class="fig" style="height:356px;background:transparent;box-shadow:none">
+          <svg viewBox="0 0 600 320" width="100%" height="100%" role="img" aria-label="How we hear sound">
+  <rect x="2" y="2" width="596" height="316" rx="18" fill="rgba(255,255,255,.028)" stroke="rgba(255,255,255,.09)"/>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="14" fill="#c9d6f2" text-anchor="middle">
+    <!-- 1 loudspeaker -->
+    <g transform="translate(70,150)">
+      <rect x="-25" y="-42" width="50" height="84" rx="9" fill="rgba(34,211,238,.08)" stroke="#6fe3ff" stroke-width="2.4"/>
+      <rect x="-13" y="-27" width="26" height="54" rx="5" fill="none" stroke="#6fe3ff" stroke-width="2"/>
+      <circle cx="0" cy="0" r="8.5" fill="#6fe3ff" opacity=".85"/>
+      <line x1="0" y1="42" x2="0" y2="58" stroke="#6fe3ff" stroke-width="2" stroke-linecap="round"/>
+      <line x1="-7" y1="50" x2="7" y2="50" stroke="#6fe3ff" stroke-width="2" stroke-linecap="round"/>
+      <text y="86" fill="#6fe3ff" font-weight="700">1 &#183; Vibration</text>
+      <text y="106" fill="#8ea0c4" font-size="12.5">an object moves</text>
+    </g>
+    <!-- waves -->
+    <g transform="translate(200,150)" fill="none" stroke-linecap="round">
+      <path d="M-42 0 q10 -17 20 0 t20 0" stroke="#22d3ee" stroke-width="2.6"/>
+      <path d="M-42 0 q15 -30 30 0 t30 0" stroke="#4fb6f0" stroke-width="2.4" opacity=".72" transform="translate(-1,0)"/>
+      <path d="M-42 0 q21 -44 42 0 t42 0" stroke="#a78bfa" stroke-width="2.2" opacity=".45"/>
+      <text y="86" fill="#6fe3ff" font-weight="700" stroke="none" fill-opacity="1">2 &#183; Sound wave</text>
+      <text y="106" fill="#8ea0c4" font-size="12.5" stroke="none">travels through air</text>
+    </g>
+    <!-- ear -->
+    <g transform="translate(345,140) scale(.92)">
+      <path d="M6 -58 c-24 0 -38 20 -38 46 c0 24 11 40 20 55 c7 12 9 24 2 31 c-6 6 -3 15 6 15 c16 0 27 -14 27 -30 c0 -20 -12 -29 -12 -50 c0 -13 12 -22 12 -36 c0 -16 -7 -31 -17 -31 z"
+            fill="rgba(34,211,238,.07)" stroke="#6fe3ff" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M6 -30 c13 3 18 14 18 27 c0 13 -7 20 -14 24" fill="none" stroke="#a78bfa" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M8 16 c12 0 17 6 17 14" fill="none" stroke="#a78bfa" stroke-width="2.2" stroke-linecap="round"/>
+      <text y="114" fill="#6fe3ff" font-weight="700">3 &#183; Eardrum</text>
+      <text y="132" fill="#8ea0c4" font-size="12.5">membrane vibrates</text>
+    </g>
+    <!-- brain -->
+    <g transform="translate(500,150)">
+      <circle cx="0" cy="0" r="38" fill="rgba(167,139,250,.09)" stroke="#a78bfa" stroke-width="2.4"/>
+      <path d="M-20 -4 q7 -13 14 0 t14 0" fill="none" stroke="#c4b5fd" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M-18 12 q7 11 14 0 t14 0" fill="none" stroke="#c4b5fd" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M-6 -22 v44" fill="none" stroke="#c4b5fd" stroke-width="1.6" opacity=".5" stroke-linecap="round"/>
+      <text y="86" fill="#c4b5fd" font-weight="700">4 &#183; Brain</text>
+      <text y="106" fill="#8ea0c4" font-size="12.5">we recognise sound</text>
+    </g>
+    <!-- connectors -->
+    <g stroke="#4a5b80" stroke-width="2" fill="none" stroke-linecap="round">
+      <path d="M104 150 h44" marker-end="url(#ar2)"/>
+      <path d="M254 150 h44" marker-end="url(#ar2)"/>
+      <path d="M404 150 h50" marker-end="url(#ar2)"/>
+    </g>
+  </g>
+  <defs>
+    <marker id="ar2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#4a5b80"/>
+    </marker>
+  </defs>
+</svg>
+        
+        <p class="cap" style="text-align:center">Vibration → wave → eardrum → brain</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 ─────────────────────────────── -->
+  <section class="slide" data-title="Recording &amp; storing">
+    <div class="kicker">The audio chain</div>
+    <h2>Recording &amp; <span class="yr">storing</span> audio</h2>
+    <div class="cols c-6-5">
+      <div>
+        <p class="lead" style="margin-bottom:20px">Audio can be <b>recorded, stored, edited, transmitted and played back</b>.</p>
+        <ul class="bul">
+          <li>A <b>microphone</b> captures the sound and converts the waves into an <b>electrical signal</b>.</li>
+          <li>Modern devices convert that signal into <b>digital data</b>.</li>
+          <li>The data is saved as an <b>audio file</b> — ready to edit, copy and send.</li>
+        </ul>
+        <div class="chips" style="margin-top:22px">
+          <span class="chip c">Record</span><span class="chip c">Store</span>
+          <span class="chip c">Edit</span><span class="chip c">Transmit</span><span class="chip c">Play back</span>
+        </div>
+      </div>
+      <div class="stack" style="gap:16px">
+        <figure class="fig fig--paper" style="height:230px">
+          <img src="img/mic-clean.jpg" alt="Condenser studio microphone" style="object-fit:contain">
+        </figure>
+        <figure class="fig fig--dark" style="height:150px">
+          <img src="img/recorder.jpg" alt="Portable digital audio recorder on a desk">
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 ─────────────────────────────── -->
+  <section class="slide" data-title="Analogue vs Digital">
+    <div class="kicker">Two ways to store sound</div>
+    <h2>Analogue <span class="yr">vs</span> Digital</h2>
+    <div class="cols c-6-6" style="gap:34px">
+      <div class="stack" style="gap:18px">
+      <div class="vs">
+        <div class="side a">
+          <h4>Analogue audio</h4>
+          <p>Sound is stored as <b>one continuous signal</b> — exactly the shape of the original wave.</p>
+          <div class="fmts"><span class="fmt">Vinyl records</span><span class="fmt">Magnetic tape</span></div>
+        </div>
+        <div class="side d">
+          <h4>Digital audio</h4>
+          <p>Sound is stored as <b>numerical data</b> — thousands of samples per second that computers can process.</p>
+          <div class="fmts"><span class="fmt">MP3</span><span class="fmt">WAV</span><span class="fmt">AAC</span><span class="fmt">FLAC</span></div>
+        </div>
+      </div>
+      <figure class="fig" style="height:124px;background:rgba(255,255,255,.028);border:1px solid rgba(255,255,255,.09);box-shadow:none;padding:12px 16px">
+          <svg viewBox="0 0 500 118" width="100%" height="100%" role="img" aria-label="Analogue continuous wave versus digital samples">
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12.5">
+    <text x="0" y="12" fill="#ffd980" font-weight="700">ANALOGUE &#183; one continuous signal</text>
+    <path d="M0 34.0 L0 34.0 L4 30.7 L8 27.5 L12 24.4 L16 21.5 L20 18.7 L24 16.2 L28 14.0 L32 12.0 L36 10.5 L40 9.3 L44 8.5 L48 8.1 L52 8.1 L56 8.5 L60 9.3 L64 10.5 L68 12.0 L72 14.0 L76 16.2 L80 18.7 L84 21.5 L88 24.4 L92 27.5 L96 30.7 L100 34.0 L104 37.3 L108 40.5 L112 43.6 L116 46.5 L120 49.3 L124 51.8 L128 54.0 L132 56.0 L136 57.5 L140 58.7 L144 59.5 L148 59.9 L152 59.9 L156 59.5 L160 58.7 L164 57.5 L168 56.0 L172 54.0 L176 51.8 L180 49.3 L184 46.5 L188 43.6 L192 40.5 L196 37.3 L200 34.0 L204 30.7 L208 27.5 L212 24.4 L216 21.5 L220 18.7 L224 16.2 L228 14.0 L232 12.0 L236 10.5 L240 9.3 L244 8.5 L248 8.1 L252 8.1 L256 8.5 L260 9.3 L264 10.5 L268 12.0 L272 14.0 L276 16.2 L280 18.7 L284 21.5 L288 24.4 L292 27.5 L296 30.7 L300 34.0 L304 37.3 L308 40.5 L312 43.6 L316 46.5 L320 49.3 L324 51.8 L328 54.0 L332 56.0 L336 57.5 L340 58.7 L344 59.5 L348 59.9 L352 59.9 L356 59.5 L360 58.7 L364 57.5 L368 56.0 L372 54.0 L376 51.8 L380 49.3 L384 46.5 L388 43.6 L392 40.5 L396 37.3 L400 34.0 L404 30.7 L408 27.5 L412 24.4 L416 21.5 L420 18.7 L424 16.2 L428 14.0 L432 12.0 L436 10.5 L440 9.3" fill="none" stroke="#fbbf24" stroke-width="2.6" stroke-linecap="round"/>
+    <line x1="0" y1="34" x2="440" y2="34" stroke="rgba(255,255,255,.10)" stroke-width="1"/>
+    <text x="0" y="86" fill="#6fe3ff" font-weight="700">DIGITAL &#183; the same sound as numbers</text>
+    <g stroke="rgba(34,211,238,.35)" stroke-width="2" stroke-linecap="round"><line x1="0" y1="30" y2="0"/><line x1="14" y1="30" y2="11"/><line x1="28" y1="30" y2="20"/><line x1="42" y1="30" y2="25"/><line x1="56" y1="30" y2="25"/><line x1="70" y1="30" y2="21"/><line x1="84" y1="30" y2="12"/><line x1="98" y1="30" y2="1"/><line x1="112" y1="30" y2="-9"/><line x1="126" y1="30" y2="-18"/><line x1="140" y1="30" y2="-24"/><line x1="154" y1="30" y2="-25"/><line x1="168" y1="30" y2="-21"/><line x1="182" y1="30" y2="-13"/><line x1="196" y1="30" y2="-3"/><line x1="210" y1="30" y2="8"/><line x1="224" y1="30" y2="17"/><line x1="238" y1="30" y2="24"/><line x1="252" y1="30" y2="25"/><line x1="266" y1="30" y2="22"/><line x1="280" y1="30" y2="15"/><line x1="294" y1="30" y2="4"/><line x1="308" y1="30" y2="-6"/><line x1="322" y1="30" y2="-16"/><line x1="336" y1="30" y2="-23"/><line x1="350" y1="30" y2="-26"/><line x1="364" y1="30" y2="-23"/><line x1="378" y1="30" y2="-16"/><line x1="392" y1="30" y2="-6"/><line x1="406" y1="30" y2="4"/><line x1="420" y1="30" y2="15"/><line x1="434" y1="30" y2="22"/></g>
+    <g fill="#22d3ee"><circle cx="0" cy="34.0" r="3"/><circle cx="14" cy="22.9" r="3"/><circle cx="28" cy="14.0" r="3"/><circle cx="42" cy="8.8" r="3"/><circle cx="56" cy="8.5" r="3"/><circle cx="70" cy="13.0" r="3"/><circle cx="84" cy="21.5" r="3"/><circle cx="98" cy="32.4" r="3"/><circle cx="112" cy="43.6" r="3"/><circle cx="126" cy="53.0" r="3"/><circle cx="140" cy="58.7" r="3"/><circle cx="154" cy="59.8" r="3"/><circle cx="168" cy="56.0" r="3"/><circle cx="182" cy="47.9" r="3"/><circle cx="196" cy="37.3" r="3"/><circle cx="210" cy="26.0" r="3"/><circle cx="224" cy="16.2" r="3"/><circle cx="238" cy="9.8" r="3"/><circle cx="252" cy="8.1" r="3"/><circle cx="266" cy="11.2" r="3"/><circle cx="280" cy="18.7" r="3"/><circle cx="294" cy="29.1" r="3"/><circle cx="308" cy="40.5" r="3"/><circle cx="322" cy="50.6" r="3"/><circle cx="336" cy="57.5" r="3"/><circle cx="350" cy="60.0" r="3"/><circle cx="364" cy="57.5" r="3"/><circle cx="378" cy="50.6" r="3"/><circle cx="392" cy="40.5" r="3"/><circle cx="406" cy="29.1" r="3"/><circle cx="420" cy="18.7" r="3"/><circle cx="434" cy="11.2" r="3"/></g>
+    <path d="M0 34.0 L0 34.0 L4 30.7 L8 27.5 L12 24.4 L16 21.5 L20 18.7 L24 16.2 L28 14.0 L32 12.0 L36 10.5 L40 9.3 L44 8.5 L48 8.1 L52 8.1 L56 8.5 L60 9.3 L64 10.5 L68 12.0 L72 14.0 L76 16.2 L80 18.7 L84 21.5 L88 24.4 L92 27.5 L96 30.7 L100 34.0 L104 37.3 L108 40.5 L112 43.6 L116 46.5 L120 49.3 L124 51.8 L128 54.0 L132 56.0 L136 57.5 L140 58.7 L144 59.5 L148 59.9 L152 59.9 L156 59.5 L160 58.7 L164 57.5 L168 56.0 L172 54.0 L176 51.8 L180 49.3 L184 46.5 L188 43.6 L192 40.5 L196 37.3 L200 34.0 L204 30.7 L208 27.5 L212 24.4 L216 21.5 L220 18.7 L224 16.2 L228 14.0 L232 12.0 L236 10.5 L240 9.3 L244 8.5 L248 8.1 L252 8.1 L256 8.5 L260 9.3 L264 10.5 L268 12.0 L272 14.0 L276 16.2 L280 18.7 L284 21.5 L288 24.4 L292 27.5 L296 30.7 L300 34.0 L304 37.3 L308 40.5 L312 43.6 L316 46.5 L320 49.3 L324 51.8 L328 54.0 L332 56.0 L336 57.5 L340 58.7 L344 59.5 L348 59.9 L352 59.9 L356 59.5 L360 58.7 L364 57.5 L368 56.0 L372 54.0 L376 51.8 L380 49.3 L384 46.5 L388 43.6 L392 40.5 L396 37.3 L400 34.0 L404 30.7 L408 27.5 L412 24.4 L416 21.5 L420 18.7 L424 16.2 L428 14.0 L432 12.0 L436 10.5 L440 9.3" fill="none" stroke="rgba(167,139,250,.75)" stroke-width="1.8" stroke-dasharray="4 4"/>
+  </g>
+</svg>
+      </figure>
+      </div>
+      <div class="stack" style="gap:16px">
+        <figure class="fig fig--paper" style="height:196px">
+          <img src="img/disc-1897.jpg" alt="Berliner gramophone disc from 1897" style="object-fit:contain;padding:6px">
+        </figure>
+        <figure class="fig fig--dark" style="height:196px">
+          <img src="img/cd.jpg" alt="Compact disc" style="object-fit:contain">
+        </figure>
+        <p class="cap" style="margin-top:2px">One continuous groove (analogue) versus a disc of numbers (digital).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 ─────────────────────────────── -->
+  <section class="slide" data-title="Audio in everyday life">
+    <div class="bleed" style="--tint:rgba(8,13,28,.80)"><img src="img/radio-studio.jpg" alt="" style="opacity:.14;filter:grayscale(.55)"></div>
+    <div class="canvasov" style="--grad:linear-gradient(90deg,rgba(8,13,28,.93),rgba(8,13,28,.80))"></div>
+    <div class="kicker">Around us</div>
+    <h2>Audio in <span class="yr">everyday life</span></h2>
+    <p class="lead" style="margin:6px 0 24px">Sound is everywhere in modern life — it carries entertainment, news, learning and conversation.</p>
+    <div class="cards g4" style="flex:0 1 auto">
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24"><path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.6"/><circle cx="17.5" cy="16" r="2.6"/></svg></div><div><h4>Music</h4><p>Streaming, downloads, concerts and playlists.</p></div></div>
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M7 5v14M17 5v14M2.5 12h19"/></svg></div><div><h4>Film &amp; TV</h4><p>Dialogue, score and sound effects carry the story.</p></div></div>
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24"><path d="M4 10v4h4l5 4V6L8 10H4z"/><path d="M16.5 8.5a5 5 0 010 7"/><path d="M19 6a8.5 8.5 0 010 12"/></svg></div><div><h4>Radio &amp; podcasts</h4><p>News, talk shows and educational series.</p></div></div>
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="4"/><path d="M7 11v3M10.5 10v5M14 11v3M17.5 10v5"/></svg></div><div><h4>Video games</h4><p>Immersive worlds built from layers of sound.</p></div></div>
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M10.5 18.5h3"/></svg></div><div><h4>Calls &amp; messages</h4><p>Voice messages, video calls, live streams.</p></div></div>
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M6 10v5c0 1.6 2.7 3 6 3s6-1.4 6-3v-5"/></svg></div><div><h4>Education</h4><p>Audiobooks, lectures, language practice.</p></div></div>
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></div><div><h4>Daily tasks</h4><p>Navigation, alarms, assistants, alerts.</p></div></div>
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24"><path d="M4 14v-4a8 8 0 0116 0v4"/><rect x="2.5" y="13" width="4.5" height="7" rx="2"/><rect x="17" y="13" width="4.5" height="7" rx="2"/></svg></div><div><h4>Private listening</h4><p>Headphones let you listen anywhere.</p></div></div>
+    </div>
+  </section>
+
+  <!-- 7 ─────────────────────────────── -->
+  <section class="slide divider" data-title="History of Audio">
+    <div class="bleed" style="--tint:rgba(5,8,18,.68)"><img src="img/gramophone.jpg" alt="Gramophone workshop" style="opacity:.22;filter:grayscale(.5)"></div>
+    <div class="canvasov" style="--grad:linear-gradient(90deg,rgba(5,8,18,.95),rgba(6,10,22,.72))"></div>
+    <div style="position:relative;z-index:2">
+      <div class="kicker">Part 2</div>
+      <h2 style="font-size:64px">History of <span class="yr">Audio</span></h2>
+      <p class="lead" style="max-width:700px;margin-top:18px">For most of human history, sound existed only while it was happening. People could speak, sing and play — but there was no way to keep the sound and hear it again.</p>
+      <p style="max-width:700px;margin-top:12px">Recording technology began in the <b>19th century</b>, when inventors tried to make sound <b>visible and permanent</b>. It moves through four great eras:</p>
+      <div class="tl" style="max-width:1060px;margin-top:38px">
+        <div class="ev"><b>Acoustic</b><span>1857 – 1925 · sound recorded purely mechanically</span></div>
+        <div class="ev"><b>Electrical</b><span>1925 – 1940s · microphones and amplifiers</span></div>
+        <div class="ev"><b>Magnetic</b><span>1930s – 1980s · tape, editing, stereo</span></div>
+        <div class="ev"><b>Digital</b><span>1970s → today · numbers, computers, internet</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 ─────────────────────────────── -->
+  <section class="slide" data-title="The Phonautograph · 1857">
+    <div class="kicker">Device 1 of 7</div>
+    <h2>The Phonautograph <span class="yr">· 1857</span></h2>
+    <div class="cols c-6-5" style="gap:38px">
+      <div class="devgrid">
+        <div class="dev">
+          <div class="lbl">Who</div>
+          <p><b>Édouard-Léon Scott de Martinville</b>, a French editor and typographer, patented it on <b>25 March 1857</b>. He wanted a machine that could imitate the ear.</p>
+        </div>
+        <div class="dev">
+          <div class="lbl">How it worked</div>
+          <p>A <b>horn</b> collected the sound → a <b>thin membrane</b> vibrated → a <b>stylus</b> traced the vibrations onto a surface covered with soot. The result was a picture of the sound — a <b>phonautogram</b>.</p>
+        </div>
+        <div class="dev warn">
+          <div class="lbl">The limitation</div>
+          <p>It could <b>record</b> sound but <b>not play it back</b>. Scott wanted speech to "write itself", but he had no way to turn the lines into sound again.</p>
+        </div>
+        <div class="dev good">
+          <div class="lbl">2008 — the voices return</div>
+          <p>Researchers scanned old phonautograms and used computers to turn the traces into digital audio — 19th-century sounds became audible again.</p>
+        </div>
+      </div>
+      <div>
+        <figure class="fig fig--paper fig--archive" style="height:400px">
+          <img src="img/phonautograph.jpg" alt="Engraving of Scott de Martinville's phonautograph" style="object-fit:contain">
+        </figure>
+        <p class="cap"><b>The first machine to record sound</b> — it drew the wave instead of playing it.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 ─────────────────────────────── -->
+  <section class="slide" data-title="The Phonograph · 1877">
+    <div class="kicker">Device 2 of 7</div>
+    <h2>The Phonograph <span class="yr">· 1877</span></h2>
+    <div class="cols c-6-5" style="gap:38px">
+      <div class="devgrid">
+        <div class="dev good">
+          <div class="lbl">The breakthrough</div>
+          <p>Twenty years later <b>Thomas Edison</b> built a machine that could <b>record sound and play it back</b> — the first time a voice could be heard again.</p>
+        </div>
+        <div class="dev">
+          <div class="lbl">Recording</div>
+          <p>A <b>metal cylinder covered with tin foil</b> rotated. Speech moved a <b>diaphragm</b> and a <b>stylus</b>, and the stylus cut indentations into the soft foil.</p>
+        </div>
+        <div class="dev">
+          <div class="lbl">Playback</div>
+          <p>The stylus followed the same groove again, the diaphragm vibrated once more, and a <b>horn</b> made the sound audible.</p>
+        </div>
+        <div class="dev warn">
+          <div class="lbl">The limitation</div>
+          <p>Later versions used <b>wax cylinders</b> — better sound, but making thousands of copies of a cylinder was difficult. That is why <b>discs</b> eventually won.</p>
+        </div>
+      </div>
+      <div>
+        <figure class="fig fig--paper fig--archive" style="height:400px">
+          <img src="img/phonograph.jpg" alt="Edison's 1877 tinfoil cylinder phonograph" style="object-fit:contain">
+        </figure>
+        <p class="cap"><b>Edison's tinfoil phonograph, 1877</b> — the first machine to make sound play back.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 ────────────────────────────── -->
+  <section class="slide" data-title="The Gramophone · 1887">
+    <div class="kicker">Device 3 of 7</div>
+    <h2>The Gramophone &amp; Disc Records <span class="yr">· 1887</span></h2>
+    <div class="cols c-6-5" style="gap:34px">
+      <div class="devgrid">
+        <div class="dev">
+          <div class="lbl">Who</div>
+          <p><b>Emile Berliner</b> patented the gramophone in <b>1887</b>. Instead of Edison's cylinder, his system used a <b>flat disc</b>.</p>
+        </div>
+        <div class="dev good">
+          <div class="lbl">Why discs won</div>
+          <p>The recording was cut as a <b>zig-zag groove</b> in the surface. A disc is easy to reproduce in <b>large quantities</b> — perfect for selling music to the public.</p>
+        </div>
+        <div class="dev span2">
+          <div class="lbl">From shellac to vinyl</div>
+          <p>By the early 20th century discs dominated recorded music. <b>Shellac</b> records were replaced by <b>vinyl</b>, and new speeds followed: <b>78 rpm</b> → <b>45 rpm singles</b> → <b>33⅓ rpm LPs</b>.</p>
+        </div>
+      </div>
+      <div class="stack" style="gap:16px">
+        <figure class="fig fig--paper" style="height:274px">
+          <img src="img/disc-1897.jpg" alt="Berliner gramophone disc, 1897" style="object-fit:contain;padding:4px">
+        </figure>
+        <figure class="fig fig--dark" style="height:120px">
+          <img src="img/vinyl-groove.jpg" alt="Stiffly close-up of a record groove and stylus">
+        </figure>
+        <p class="cap" style="margin-top:0">Berliner's own disc from <b>1897</b> — the zig-zag groove cut into a flat, mass-produced format.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11 ────────────────────────────── -->
+  <section class="slide" data-title="Electrical Recording · 1920s">
+    <div class="kicker">Device 4 of 7</div>
+    <h2>Electrical Recording <span class="yr">· 1920s</span></h2>
+    <div class="cols c-6-5" style="gap:38px">
+      <div class="devgrid">
+        <div class="dev warn">
+          <div class="lbl">Before 1925</div>
+          <p>Recording was purely <b>mechanical</b>. Performers had to play straight into a large <b>recording horn</b>, which passed the vibrations to the recording medium.</p>
+        </div>
+        <div class="dev good">
+          <div class="lbl">1925</div>
+          <p><b>Microphones, electronic amplifiers</b> and better equipment became standard. A much wider range of sounds could be captured, and <b>volume and balance were controlled electronically</b>.</p>
+        </div>
+        <div class="dev span2">
+          <div class="lbl">What changed</div>
+          <p>Recordings became far more realistic. <b>Quiet instruments and soft voices</b> could be recorded effectively — and audio became central to <b>radio and cinema</b>.</p>
+        </div>
+      </div>
+      <div>
+        <figure class="fig fig--paper fig--archive" style="height:390px">
+          <img src="img/session-1920s.jpg" alt="Singer and flutist recording in front of a horn, 1920s" style="object-fit:contain">
+        </figure>
+        <p class="cap"><b>A recording session, 1920s</b> — performers still facing the horn, before microphones took over.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12 ────────────────────────────── -->
+  <section class="slide" data-title="Magnetic Tape · 1930s–1950s">
+    <div class="kicker">Device 5 of 7</div>
+    <h2>Magnetic Tape <span class="yr">· 1930s–1950s</span></h2>
+    <div class="cols c-6-5" style="gap:38px">
+      <div class="devgrid">
+        <div class="dev">
+          <div class="lbl">Origins</div>
+          <p>Magnetic recording had already been shown in the <b>late 19th century</b>, but <b>tape</b> became important in the 20th. Developed in <b>Germany in the 1930s</b>, it became known worldwide after the Second World War.</p>
+        </div>
+        <div class="dev good">
+          <div class="lbl">What was better</div>
+          <p><b>Much better sound quality</b> and <b>longer recordings</b> than earlier methods — and, crucially, it could be <b>edited</b>: tape could be cut and joined.</p>
+        </div>
+        <div class="dev span2">
+          <div class="lbl">By the 1950s</div>
+          <p>Tape was the <b>standard of radio and music production</b>. It is what made <b>stereo</b> and <b>multi-track</b> recording possible, and it led to the <b>compact cassette</b> for home use.</p>
+        </div>
+      </div>
+      <div>
+        <figure class="fig fig--dark" style="height:390px">
+          <img src="img/magnetophon-1939.jpg" alt="AEG Magnetophon tape recorder, 1939">
+        </figure>
+        <p class="cap"><b>The AEG Magnetophon, 1939</b> — the machine that made tape recording practical.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 13 ────────────────────────────── -->
+  <section class="slide" data-title="Tape: stereo, multi-track &amp; cassette">
+    <div class="kicker">Device 5 of 7 · continued</div>
+    <h2>What Tape <span class="yr">Made Possible</span></h2>
+    <div class="cols c-6-5" style="gap:34px">
+      <div class="devgrid">
+        <div class="dev good">
+          <div class="lbl">Stereo</div>
+          <p>Two channels captured the same performance from slightly different positions, giving a much wider, more realistic sense of space.</p>
+        </div>
+        <div class="dev good">
+          <div class="lbl">Multi-track</div>
+          <p>Musicians recorded <b>different parts separately</b> — drums, then bass, then vocals — and engineers <b>combined them later</b>. Modern music production was born.</p>
+        </div>
+        <div class="dev span2">
+          <div class="lbl">The cassette</div>
+          <p>Tape led to the <b>compact cassette</b>: small, cheap and reusable. For the first time ordinary people could <b>record and listen at home</b>.</p>
+        </div>
+      </div>
+      <div class="stack" style="gap:16px">
+        <figure class="fig fig--dark" style="height:240px">
+          <img src="img/reel2reel.jpg" alt="Reel-to-reel tape recorder">
+        </figure>
+        <figure class="fig fig--dark" style="height:150px">
+          <img src="img/cassette-dat.jpg" alt="Compact cassette and DAT tapes">
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- 14 ────────────────────────────── -->
+  <section class="slide" data-title="The Digital Era">
+    <div class="kicker">Device 6 of 7</div>
+    <h2>The Digital Era <span class="yr">· 1970s →</span></h2>
+    <div class="cols c-6-5" style="gap:38px">
+      <div class="devgrid">
+        <div class="dev">
+          <div class="lbl">The change</div>
+          <p>Sound stopped being one continuous physical signal. It became <b>a series of numerical samples</b> that computers can store, process, copy and edit.</p>
+        </div>
+        <div class="dev good">
+          <div class="lbl">1979</div>
+          <p>The first popular music album recorded <b>entirely digitally</b> was released — and digital recording moved quickly into professional studios and home systems.</p>
+        </div>
+        <div class="dev span2">
+          <div class="lbl">Why it matters</div>
+          <p>A file can be copied without losing quality, edited non-destructively and sent anywhere in the world. Audio becomes <b>data</b>.</p>
+        </div>
+        <div class="chips span2" style="margin-top:2px">
+          <span class="chip c">Samples</span><span class="chip c">Bit depth</span>
+          <span class="chip c">Non-destructive edit</span><span class="chip c">Lossless copies</span>
+        </div>
+      </div>
+      <div>
+        <figure class="fig fig--dark" style="height:390px">
+          <img src="img/daw-waveform.jpg" alt="A digital audio workstation showing a recorded waveform">
+        </figure>
+        <p class="cap"><b>Digital audio on screen</b> — the sound is now a waveform you can cut, move and process.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 15 ────────────────────────────── -->
+  <section class="slide" data-title="The Compact Disc · 1980s">
+    <div class="kicker">Device 6 of 7 · continued</div>
+    <h2>The Compact Disc <span class="yr">· 1980s</span></h2>
+    <div class="cols c-6-5" style="gap:38px">
+      <div class="devgrid">
+        <div class="dev good">
+          <div class="lbl">Why the CD won</div>
+          <p>CDs were <b>smaller and far more durable</b> than vinyl records — no scratches from a stylus, no warping, and they could be handled and stacked freely.</p>
+        </div>
+        <div class="dev">
+          <div class="lbl">Capacity and quality</div>
+          <p>A single disc could store <b>a large amount of high-quality digital audio</b> with no loss of quality when copied.</p>
+        </div>
+        <div class="dev span2">
+          <div class="lbl">Impact</div>
+          <p>CDs became <b>one of the most popular ways to listen to recorded music</b> and defined the sound of the 1980s and 1990s.</p>
+        </div>
+      </div>
+      <div>
+        <figure class="fig fig--dark" style="height:390px">
+          <img src="img/cd-player.jpg" alt="CD player with an open tray">
+        </figure>
+        <p class="cap"><b>The CD player</b> — a laser reads the digital pits on the disc, with no needle touching the surface.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 16 ────────────────────────────── -->
+  <section class="slide" data-title="MP3, Computers &amp; the Internet">
+    <div class="kicker">Device 7 of 7</div>
+    <h2>MP3, Computers &amp; the <span class="yr">Internet</span></h2>
+    <div class="cols c-6-5" style="gap:38px">
+      <div class="devgrid">
+        <div class="dev">
+          <div class="lbl">Audio becomes a file</div>
+          <p>Formats such as <b>WAV</b> and <b>MP3</b> let audio exist as an ordinary computer file, instead of being tied to a physical recording medium.</p>
+        </div>
+        <div class="dev good">
+          <div class="lbl">Compression</div>
+          <p>MP3 mattered because <b>compression makes files much smaller</b>. You could store huge music collections and send them across the internet.</p>
+        </div>
+        <div class="dev span2">
+          <div class="lbl">No physical limits</div>
+          <p>Digital audio became <b>easy to copy and edit</b> — with none of the wear, noise or effort of discs and tapes.</p>
+        </div>
+      </div>
+      <div>
+        <figure class="fig fig--dark" style="height:390px">
+          <img src="img/laptop-desk.jpg" alt="A laptop on a desk">
+        </figure>
+        <p class="cap"><b>Sound without a medium</b> — a music collection is now just an ordinary folder on a computer.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 17 ────────────────────────────── -->
+  <section class="slide" data-title="Streaming &amp; audio today">
+    <div class="kicker">Today</div>
+    <h2>Streaming &amp; Audio <span class="yr">Today</span></h2>
+    <div class="cols c-6-5" style="gap:38px">
+      <div class="devgrid">
+        <div class="dev">
+          <div class="lbl">A change in habits</div>
+          <p>Instead of <b>buying a physical recording</b>, people download files or listen online.</p>
+        </div>
+        <div class="dev good">
+          <div class="lbl">Since the late 2000s</div>
+          <p><b>Streaming</b> has become the dominant way to listen — music, podcasts and audiobooks play through the internet <b>without owning the file</b>.</p>
+        </div>
+        <div class="dev span2">
+          <div class="lbl">Right now</div>
+          <p>Audio can be recorded with something as simple as a <b>smartphone</b>, edited with <b>computer software</b>, and heard <b>around the world in seconds</b>.</p>
+        </div>
+        <p class="span2" style="font-size:17.5px;color:#8ea0c4;margin-top:2px;padding-left:14px;border-left:3px solid rgba(34,211,238,.45)">Technology turned sound from something temporary into something that can be <b style="color:#fff">recorded, edited, stored and shared globally</b>.</p>
+      </div>
+      <div>
+        <figure class="fig fig--dark" style="height:390px">
+          <img src="img/recorder.jpg" alt="Modern digital recording and editing setup">
+        </figure>
+        <p class="cap"><b>Record anywhere</b> — a phone and a laptop are a complete audio studio.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 18 ────────────────────────────── -->
+  <section class="slide" data-title="Benefits of Audio">
+    <div class="kicker">Part 3</div>
+    <h2>Benefits of <span class="yr">Audio</span></h2>
+    <div class="cards g4">
+      <div class="card">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 016.5 3H19v15H6.5A2.5 2.5 0 004 20.5z"/><path d="M4 5.5v15"/><path d="M9 7h6"/></svg></div>
+        <div><h4>Information without a screen</h4><p>Audiobooks and podcasts let people absorb information without constantly looking at a display.</p></div>
+      </div>
+      <div class="card">
+        <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 2.5 15 0 18M12 3C9.5 5.6 9.5 18 12 21"/></svg></div>
+        <div><h4>Learning languages</h4><p>Students practise listening, pronunciation and natural spoken rhythm by ear.</p></div>
+      </div>
+      <div class="card">
+        <div class="ic"><svg viewBox="0 0 24 24"><rect x="2.5" y="4.5" width="19" height="15" rx="2"/><path d="M7 9.5l3 2.5-3 2.5M12.5 15h4.5"/></svg></div>
+        <div><h4>Richer media</h4><p>Music, dialogue and sound effects make films, games and presentations far more engaging.</p></div>
+      </div>
+      <div class="card">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l8 3.5v5c0 5-3.4 8.6-8 9.5-4.6-.9-8-4.5-8-9.5v-5z"/><path d="M9 12l2 2 4-4"/></svg></div>
+        <div><h4>Preserving information</h4><p>Interviews, speeches, stories and historical recordings are kept alive and replayable forever.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 19 ────────────────────────────── -->
+  <section class="slide" data-title="How students can use audio">
+    <div class="kicker">Part 4</div>
+    <h2>How Can <span class="yr">You</span> Use Audio?</h2>
+    <div class="cards s19" style="flex:0 1 auto">
+      <div class="card">
+        <div class="n">1</div>
+        <div><h4>Listening to music</h4><p>Relax, improve your mood, or simply enjoy your free time.</p></div>
+      </div>
+      <div class="card">
+        <div class="n">2</div>
+        <div><h4>Learning languages</h4><p>Train your listening skills, pronunciation and understanding of English or any other language.</p></div>
+      </div>
+      <div class="card">
+        <div class="n">3</div>
+        <div><h4>Listening to podcasts</h4><p>Pick up science, history, technology and other topics while you walk or travel.</p></div>
+      </div>
+      <div class="card">
+        <div class="n">4</div>
+        <div><h4>Listening to audiobooks</h4><p>Hear how pronunciation, dialogue and storytelling bring a book to life.</p></div>
+      </div>
+      <div class="card">
+        <div class="n">5</div>
+        <div><h4>Recording your own voice</h4><p>Read a text, play it back, and notice your own mistakes in pronunciation.</p></div>
+      </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 20 ────────────────────────────── -->
+  <section class="slide" data-title="Key takeaways">
+    <div class="bleed" style="--tint:rgba(8,13,28,.86)"><img src="img/gramophone.jpg" alt="" style="opacity:.12;filter:grayscale(.6)"></div>
+    <div class="canvasov" style="--grad:linear-gradient(105deg,rgba(8,13,28,.97) 30%,rgba(8,13,28,.88) 100%)"></div>
+    <div style="position:relative;z-index:1;display:flex;flex-direction:column;height:100%">
+      <div class="kicker">Summary</div>
+      <h2>Key <span class="yr">Takeaways</span></h2>
+      <div class="cols c-6-6" style="gap:40px;align-items:start;margin-top:30px">
+        <ul class="bul" style="gap:13px">
+          <li><b>1857</b> — the phonautograph captured sound, but could not play it back.</li>
+          <li><b>1877</b> — Edison's phonograph made recorded sound playable.</li>
+          <li><b>1887</b> — Berliner's disc made music something you could sell in millions.</li>
+          <li><b>1925</b> — electricity made recording realistic.</li>
+        </ul>
+        <ul class="bul" style="gap:13px">
+          <li><b>1930s</b> — magnetic tape made recording editable, stereo and multi-track.</li>
+          <li><b>1970s–80s</b> — numbers, computers and the CD brought perfect copies.</li>
+          <li><b>2000s</b> — MP3, the internet and streaming made audio portable and infinite.</li>
+          <li><b>Today</b> — sound goes from temporary to permanent, editable and global.</li>
+        </ul>
+      </div>
+      <div style="margin-top:auto;padding:20px 26px;border-radius:16px;border:1px solid rgba(34,211,238,.22);background:linear-gradient(120deg,rgba(34,211,238,.12),rgba(167,139,250,.06))">
+        <p class="lead" style="font-size:23px;line-height:1.45">Audio turned sound from something we could only experience <em>while it was happening</em> into something we can <b>record, edit, store and share</b> with the whole world.</p>
+      </div>
+    </div>
+  </section>
+
+  </div><!-- /#canvas -->
+
+  <!-- click zones -->
+  <div class="zone l" id="zoneL" title="Previous slide"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></div>
+  <div class="zone r" id="zoneR" title="Next slide"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></div>
+
+  <!-- control panel -->
+  <div id="zbadge"></div>
+  <div id="panel">
+    <button id="bPrev" title="Previous (←)"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <button id="bNext" title="Next (→)"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+    <div class="sep"></div>
+    <span id="counter" title="Overview (O)">01 <small>/ 20</small></span>
+    <div class="sep"></div>
+    <button id="bFs" title="Fullscreen (F)"><span id="fsLabel">Enter fullscreen</span></button>
+  </div>
+
+  <!-- overview -->
+  <div id="ov">
+    <h3>All slides</h3>
+    <div class="sub">Click a slide to jump · press <b>O</b> or <b>Esc</b> to close · <b>Ctrl + scroll</b> or <b>Ctrl + +/−</b> to zoom · <b>Ctrl + 0</b> to reset</div>
+    <div id="ovgrid"></div>
+  </div>
+
+</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var stage   = document.getElementById('stage');
+  var slides  = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var bar     = document.getElementById('bar');
+  var counter = document.getElementById('counter');
+  var panel   = document.getElementById('panel');
+  var ov      = document.getElementById('ov');
+  var ovgrid  = document.getElementById('ovgrid');
+  var fsLabel = document.getElementById('fsLabel');
+  var total   = slides.length;
+  var i = 0;
+
+  /* ---------- fill the whole screen + user zoom ---------- */
+  var zbadge = document.getElementById('zbadge');
+  var zoom = 1;                       /* 1 = fit to the screen, >1 = magnify */
+  var pan  = {x:0, y:0};              /* drag offset while magnified      */
+  var zTimer = null;
+
+  function applyTf(){
+    var s0 = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+    var sc = s0 * zoom;
+    /* keep the slide reachable, but never let it drift off the screen */
+    var maxX = Math.max(0, (1280 * sc - window.innerWidth)  / 2);
+    var maxY = Math.max(0, (720  * sc - window.innerHeight) / 2);
+    pan.x = Math.max(-maxX, Math.min(maxX, pan.x));
+    pan.y = Math.max(-maxY, Math.min(maxY, pan.y));
+    stage.style.transform =
+      'translate(-50%,-50%) translate(' + pan.x + 'px,' + pan.y + 'px) scale(' + sc + ')';
+  }
+
+  function fit(){
+    /* stage box is sized to cover the screen exactly -> no empty margins,
+       while the 1280x720 canvas inside keeps the layout itself uncropped */
+    var s0 = Math.max(Math.min(window.innerWidth / 1280, window.innerHeight / 720), 0.02);
+    stage.style.width  = (window.innerWidth  / s0) + 'px';
+    stage.style.height = (window.innerHeight / s0) + 'px';
+    applyTf();
+  }
+
+  function setZoom(z){
+    zoom = Math.max(1, Math.min(5, Math.round(z * 1000) / 1000));
+    if (zoom <= 1.001) pan.x = pan.y = 0;
+    fit();
+    zbadge.innerHTML = 'Zoom <b>' + Math.round(zoom * 100) + '%</b>';
+    zbadge.classList.add('on');
+    clearTimeout(zTimer);
+    zTimer = setTimeout(function(){ zbadge.classList.remove('on'); }, 1600);
+  }
+
+  /* drag the magnified slide around */
+  var dragging = false, moved = false, justPanned = false, sx = 0, sy = 0, px = 0, py = 0;
+  stage.addEventListener('pointerdown', function(e){
+    justPanned = false;
+    if (zoom <= 1.01) return;
+    dragging = true; moved = false; sx = e.clientX; sy = e.clientY;
+    px = pan.x; py = pan.y;
+  });
+  window.addEventListener('pointermove', function(e){
+    if (!dragging) return;
+    var dx = e.clientX - sx, dy = e.clientY - sy;
+    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
+    pan.x = px + dx; pan.y = py + dy;
+    applyTf();
+  });
+  window.addEventListener('pointerup', function(){
+    if (!dragging) return;
+    dragging = false;
+    justPanned = moved;
+  });
+
+  window.addEventListener('resize', fit);
+  fit();
+
+  /* ---------- overview ---------- */
+  slides.forEach(function(s, n){
+    var b = document.createElement('button');
+    b.className = 'ovc';
+    b.innerHTML = '<i>' + String(n+1).padStart(2,'0') + '</i><span>' + (s.dataset.title || '') + '</span>';
+    b.addEventListener('click', function(){ go(n); toggleOv(false); });
+    ovgrid.appendChild(b);
+  });
+  function toggleOv(on){
+    var show = (typeof on === 'boolean') ? on : !ov.classList.contains('on');
+    ov.classList.toggle('on', show);
+    if (show) markOv();
+  }
+  function markOv(){
+    Array.prototype.forEach.call(ovgrid.children, function(c, n){ c.classList.toggle('cur', n === i); });
+  }
+
+  /* ---------- navigation ---------- */
+  function go(n, back){
+    n = Math.max(0, Math.min(total - 1, n));
+    if (n === i) return;
+    slides[i].classList.remove('is-active', 'back');
+    i = n;
+    slides[i].classList.add('is-active');
+    if (back) slides[i].classList.add('back');
+    bar.style.width = ((i + 1) / total * 100) + '%';
+    counter.innerHTML = String(i + 1).padStart(2,'0') + ' <small>/ ' + total + '</small>';
+    markOv();
+  }
+  function next(){ go(i + 1); }
+  function prev(){ go(i - 1, true); }
+
+  /* ---------- fullscreen ---------- */
+  function fsEl(){ return document.fullscreenElement || document.webkitFullscreenElement; }
+  function toggleFs(){
+    if (!fsEl()){
+      var e = document.documentElement;
+      (e.requestFullscreen || e.webkitRequestFullscreen || function(){}).call(e);
+    } else {
+      (document.exitFullscreen || document.webkitExitFullscreen || function(){}).call(document);
+    }
+  }
+  function syncFs(){
+    fsLabel.textContent = fsEl() ? 'Exit fullscreen' : 'Enter fullscreen';
+  }
+  document.addEventListener('fullscreenchange', syncFs);
+  document.addEventListener('webkitfullscreenchange', syncFs);
+
+  /* ---------- auto-hiding panel ---------- */
+  var timer = null;
+  function wake(){
+    panel.classList.remove('is-hidden');
+    clearTimeout(timer);
+    timer = setTimeout(function(){
+      panel.classList.add('is-hidden');
+    }, 2600);
+  }
+  panel.addEventListener('mouseenter', function(){ clearTimeout(timer); });
+  panel.addEventListener('mouseleave', wake);
+
+  /* ---------- input ---------- */
+  document.getElementById('bNext').addEventListener('click', function(e){ e.stopPropagation(); next(); wake(); });
+  document.getElementById('bPrev').addEventListener('click', function(e){ e.stopPropagation(); prev(); wake(); });
+  document.getElementById('bFs').addEventListener('click', function(e){ e.stopPropagation(); toggleFs(); wake(); });
+  counter.addEventListener('click', function(e){ e.stopPropagation(); toggleOv(); wake(); });
+  document.getElementById('zoneL').addEventListener('click', function(){ if (justPanned) { justPanned = false; return; } prev(); wake(); });
+  document.getElementById('zoneR').addEventListener('click', function(){ if (justPanned) { justPanned = false; return; } next(); wake(); });
+
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape'){ if (ov.classList.contains('on')) { toggleOv(false); e.preventDefault(); return; } }
+    var k = e.key;
+    if (k === 'ArrowRight' || k === 'ArrowDown' || k === ' ' || k === 'PageDown' || k === 'n' || k === 'N'){ next(); }
+    else if (k === 'ArrowLeft' || k === 'ArrowUp' || k === 'PageUp' || k === 'p' || k === 'P'){ prev(); }
+    else if (k === 'Home'){ go(0); }
+    else if (k === 'End'){ go(total - 1); }
+    else if (k === 'f' || k === 'F' || k === 'р' || k === 'Р'){ toggleFs(); }
+    else if (k === 'o' || k === 'O' || k === 'щ' || k === 'Щ'){ toggleOv(); }
+    else return;
+    e.preventDefault();
+    wake();
+  });
+
+  ['mousemove','mousedown','touchstart','wheel'].forEach(function(ev){
+    document.addEventListener(ev, wake, {passive:true});
+  });
+
+  /* Ctrl + scroll = zoom the whole presentation (content AND chrome) */
+  document.addEventListener('wheel', function(e){
+    if (!(e.ctrlKey || e.metaKey)) return;
+    e.preventDefault();
+    setZoom(zoom * (e.deltaY < 0 ? 1.12 : 1 / 1.12));
+    wake();
+  }, {passive:false});
+
+  /* keyboard zoom + double-click to reset */
+  document.addEventListener('keydown', function(e){
+    var k = e.key;
+    if ((e.ctrlKey || e.metaKey) && (k === '=' || k === '+')) { e.preventDefault(); setZoom(zoom * 1.15); }
+    else if ((e.ctrlKey || e.metaKey) && (k === '-' || k === '_')) { e.preventDefault(); setZoom(zoom / 1.15); }
+    else if ((e.ctrlKey || e.metaKey) && k === '0') { e.preventDefault(); setZoom(1); }
+  });
+  document.addEventListener('dblclick', function(){ if (zoom !== 1) setZoom(1); });
+
+  /* touch swipe */
+  var sx = 0, sy = 0;
+  document.addEventListener('touchstart', function(e){ sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, {passive:true});
+  document.addEventListener('touchend', function(e){
+    var dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+    if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy)) { dx < 0 ? next() : prev(); }
+  }, {passive:true});
+
+  /* ---------- boot ---------- */
+  slides[0].classList.add('is-active');
+  bar.style.width = (1 / total * 100) + '%';
+  counter.innerHTML = '01 <small>/ ' + total + '</small>';
+  markOv();
+  wake();
+  setTimeout(wake, 1200);
+})();
+</script>
+</body>
+</html>
