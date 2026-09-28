@@ -53,12 +53,51 @@ body{
   position:absolute;inset:0;
   padding:56px 66px 74px;
   display:none;flex-direction:column;
-  opacity:0;
+  opacity:0;will-change:transform,opacity;
 }
-.slide.is-active{display:flex;animation:slideIn .5s cubic-bezier(.22,.9,.3,1) forwards}
-@keyframes slideIn{from{opacity:0;transform:translateY(16px) scale(.995)}to{opacity:1;transform:none}}
-.slide.is-active.back{animation:slideBack .5s cubic-bezier(.22,.9,.3,1) forwards}
-@keyframes slideBack{from{opacity:0;transform:translateY(-16px) scale(.995)}to{opacity:1;transform:none}}
+.slide.is-active,.slide.is-leaving{display:flex}
+
+/* enter: slides in from the direction of travel, fading and settling to 1:1 */
+.slide.is-active{
+  z-index:2;
+  animation:slideEnter .58s cubic-bezier(.19,.86,.24,1) both;
+}
+@keyframes slideEnter{
+  from{opacity:0;transform:translate3d(calc(var(--dir,1) * 58px),0,0) scale(.972)}
+  to  {opacity:1;transform:translate3d(0,0,0) scale(1)}
+}
+
+/* leave: fades back and sinks slightly, so it reads as depth, not a carousel */
+.slide.is-leaving{
+  z-index:1;
+  animation:slideLeave .40s cubic-bezier(.5,0,.72,.4) both;
+}
+@keyframes slideLeave{
+  from{opacity:1;transform:translate3d(0,0,0) scale(1)}
+  to  {opacity:0;transform:translate3d(calc(var(--dir,1) * -26px),0,0) scale(.975)}
+}
+
+/* contents arrive one after another */
+.slide.is-active > *{animation:riseIn .55s cubic-bezier(.19,.86,.24,1) both}
+.slide.is-active > *:nth-child(1){animation-delay:.05s}
+.slide.is-active > *:nth-child(2){animation-delay:.11s}
+.slide.is-active > *:nth-child(3){animation-delay:.17s}
+.slide.is-active > *:nth-child(4){animation-delay:.23s}
+.slide.is-active > *:nth-child(5){animation-delay:.29s}
+.slide.is-active > *:nth-child(6){animation-delay:.35s}
+@keyframes riseIn{from{opacity:0;transform:translate3d(0,24px,0)}to{opacity:1;transform:none}}
+
+/* photos settle in behind a gentle zoom */
+.slide.is-active .fig img{animation:figIn .95s cubic-bezier(.19,.86,.24,1) both}
+@keyframes figIn{from{opacity:.25;transform:scale(1.07)}to{opacity:1;transform:scale(1)}}
+
+/* full-bleed backdrops must not take part */
+.slide.is-active > .bleed,.slide.is-active > .canvasov{animation:none}
+
+@media (prefers-reduced-motion:reduce){
+  .slide.is-active,.slide.is-leaving,.slide.is-active > *,.slide.is-active .fig img{animation:none!important}
+  .slide.is-active{opacity:1}
+}
 
 /* ambient waveform on every slide */
 .bg-wave{position:absolute;left:0;right:0;bottom:-40px;height:260px;opacity:.10;pointer-events:none;z-index:0}
@@ -248,7 +287,7 @@ em{color:#6fe3ff;font-style:normal;font-weight:600}
 .fmt{font-size:14px;font-weight:700;padding:5px 11px;border-radius:8px;background:rgba(255,255,255,.08);color:#dbe6fb}
 
 /* ---------- progress ---------- */
-#bar{position:absolute;left:0;top:0;height:3px;z-index:30;background:linear-gradient(90deg,#22d3ee,#a78bfa);transition:width .35s ease;border-radius:0 2px 2px 0}
+#bar{position:absolute;left:0;top:0;height:3px;z-index:30;background:linear-gradient(90deg,#22d3ee,#a78bfa);transition:width .55s cubic-bezier(.19,.86,.24,1);border-radius:0 2px 2px 0}
 #zbadge{
   position:absolute;right:24px;top:22px;z-index:45;
   font:700 14px/1 ui-monospace,"Cascadia Mono",Consolas,monospace;color:#a9badb;
@@ -294,6 +333,8 @@ em{color:#6fe3ff;font-style:normal;font-weight:600}
   font:700 15px/1 ui-monospace,"Cascadia Mono",Consolas,monospace;color:#fff;
   letter-spacing:.06em;padding:0 6px;min-width:74px;text-align:center;cursor:pointer;
 }
+#counter.bump{animation:counterBump .4s cubic-bezier(.19,.86,.24,1)}
+@keyframes counterBump{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 #counter small{color:#7b8cb0;font-weight:600}
 
 
@@ -467,10 +508,6 @@ em{color:#6fe3ff;font-style:normal;font-weight:600}
           <li>Modern devices convert that signal into <b>digital data</b>.</li>
           <li>The data is saved as an <b>audio file</b> — ready to edit, copy and send.</li>
         </ul>
-        <div class="chips" style="margin-top:22px">
-          <span class="chip c">Record</span><span class="chip c">Store</span>
-          <span class="chip c">Edit</span><span class="chip c">Transmit</span><span class="chip c">Play back</span>
-        </div>
       </div>
       <div class="stack" style="gap:16px">
         <figure class="fig fig--paper" style="height:230px">
@@ -1054,15 +1091,38 @@ em{color:#6fe3ff;font-style:normal;font-weight:600}
   }
 
   /* ---------- navigation ---------- */
-  function go(n, back){
+  var leaving = null, leaveTimer = null;
+
+  function finishLeave(){
+    if (leaving){ leaving.classList.remove('is-leaving'); leaving = null; }
+  }
+
+  function go(n){
     n = Math.max(0, Math.min(total - 1, n));
     if (n === i) return;
-    slides[i].classList.remove('is-active', 'back');
+
+    var dir  = n > i ? 1 : -1;      /* +1 = moving forward */
+    var old  = slides[i];
+    var next_ = slides[n];
+
+    finishLeave();                  /* never stack two leaving slides */
+
+    old.style.setProperty('--dir', -dir);   /* the old one drifts the other way */
+    next_.style.setProperty('--dir', dir);
+
+    old.classList.remove('is-active');
+    next_.classList.add('is-active');
+    old.classList.add('is-leaving');
+    leaving = old;
+    clearTimeout(leaveTimer);
+    leaveTimer = setTimeout(finishLeave, 900);
+
     i = n;
-    slides[i].classList.add('is-active');
-    if (back) slides[i].classList.add('back');
     bar.style.width = ((i + 1) / total * 100) + '%';
     counter.innerHTML = String(i + 1).padStart(2,'0') + ' <small>/ ' + total + '</small>';
+    counter.classList.remove('bump');
+    void counter.offsetWidth;               /* restart the little bump */
+    counter.classList.add('bump');
     markOv();
   }
   function next(){ go(i + 1); }
