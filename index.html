@@ -298,9 +298,9 @@ em{color:#6fe3ff;font-style:normal;font-weight:600}
 #zbadge b{color:#6fe3ff}
 
 /* author watermark, bottom-right of the screen on every slide */
-#wm{position:absolute;right:30px;bottom:24px;z-index:12;text-align:right;pointer-events:none;user-select:none}
-#wm .wm-name{font-size:20px;font-weight:800;letter-spacing:.005em;color:rgba(159,179,214,.92)}
-#wm .wm-school{font-size:13.5px;font-weight:600;letter-spacing:.05em;color:rgba(92,111,150,.95);margin-top:4px}
+#wm{position:absolute;right:26px;bottom:19px;z-index:12;text-align:right;pointer-events:none;user-select:none}
+#wm .wm-name{font-size:14px;font-weight:800;letter-spacing:.005em;color:rgba(159,179,214,.92)}
+#wm .wm-school{font-size:10.5px;font-weight:600;letter-spacing:.05em;color:rgba(92,111,150,.95);margin-top:4px}
 
 #brand{position:absolute;left:66px;bottom:26px;z-index:5;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:#54658a;font-weight:700}
 
@@ -308,7 +308,7 @@ em{color:#6fe3ff;font-style:normal;font-weight:600}
 .zone{position:absolute;top:0;bottom:0;width:17%;z-index:20;cursor:pointer;display:grid;place-items:center;opacity:0;transition:opacity .2s}
 .zone.l{left:0}
 .zone.r{right:0}
-.zone:hover{opacity:1}
+.zone:hover{opacity:0}
 .zone svg{width:34px;height:34px;stroke:#6fe3ff;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 10px rgba(34,211,238,.7))}
 
 /* ---------- control panel ---------- */
@@ -393,7 +393,6 @@ em{color:#6fe3ff;font-style:normal;font-weight:600}
         <span class="chip c">What is audio</span>
         <span class="chip v">History</span>
         <span class="chip a">Benefits</span>
-        <span class="chip">Student practice</span>
       </div>
     </div>
     <div class="meta">20 slides · press <b>→</b> to begin</div>
@@ -406,12 +405,12 @@ em{color:#6fe3ff;font-style:normal;font-weight:600}
     <div class="cols c-6-6">
       <div class="stack">
         <p class="lead">Audio is a form of <b>information</b> that is represented and transmitted through <b>sound</b>.</p>
+        <p>Audio lets people pass on information <b>without written text or images</b> — we simply listen.</p>
         <div class="chips">
           <span class="chip c">Speech</span><span class="chip c">Music</span>
           <span class="chip c">Podcasts</span><span class="chip c">Interviews</span>
           <span class="chip c">Sound effects</span><span class="chip c">Audiobooks</span>
         </div>
-        <p>Audio lets people pass on information <b>without written text or images</b> — we simply listen.</p>
       </div>
       <div>
         <figure class="fig fig--dark" style="height:392px">
@@ -510,11 +509,8 @@ em{color:#6fe3ff;font-style:normal;font-weight:600}
         </ul>
       </div>
       <div class="stack" style="gap:16px">
-        <figure class="fig fig--paper" style="height:230px">
+        <figure class="fig fig--paper" style="height:404px">
           <img src="img/mic-clean.jpg" alt="Condenser studio microphone" style="object-fit:contain">
-        </figure>
-        <figure class="fig fig--dark" style="height:150px">
-          <img src="img/recorder.jpg" alt="Portable digital audio recorder on a desk">
         </figure>
       </div>
     </div>
@@ -525,7 +521,7 @@ em{color:#6fe3ff;font-style:normal;font-weight:600}
     <div class="kicker">Two ways to store sound</div>
     <h2>Analogue <span class="yr">vs</span> Digital</h2>
     <div class="cols c-6-6" style="gap:34px">
-      <div class="stack" style="gap:18px">
+      <div class="stack" style="gap:18px;justify-content:center">
       <div class="vs">
         <div class="side a">
           <h4>Analogue audio</h4>
@@ -538,19 +534,7 @@ em{color:#6fe3ff;font-style:normal;font-weight:600}
           <div class="fmts"><span class="fmt">MP3</span><span class="fmt">WAV</span><span class="fmt">AAC</span><span class="fmt">FLAC</span></div>
         </div>
       </div>
-      <figure class="fig" style="height:124px;background:rgba(255,255,255,.028);border:1px solid rgba(255,255,255,.09);box-shadow:none;padding:12px 16px">
-          <svg viewBox="0 0 500 118" width="100%" height="100%" role="img" aria-label="Analogue continuous wave versus digital samples">
-  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12.5">
-    <text x="0" y="12" fill="#ffd980" font-weight="700">ANALOGUE &#183; one continuous signal</text>
-    <path d="M0 34.0 L0 34.0 L4 30.7 L8 27.5 L12 24.4 L16 21.5 L20 18.7 L24 16.2 L28 14.0 L32 12.0 L36 10.5 L40 9.3 L44 8.5 L48 8.1 L52 8.1 L56 8.5 L60 9.3 L64 10.5 L68 12.0 L72 14.0 L76 16.2 L80 18.7 L84 21.5 L88 24.4 L92 27.5 L96 30.7 L100 34.0 L104 37.3 L108 40.5 L112 43.6 L116 46.5 L120 49.3 L124 51.8 L128 54.0 L132 56.0 L136 57.5 L140 58.7 L144 59.5 L148 59.9 L152 59.9 L156 59.5 L160 58.7 L164 57.5 L168 56.0 L172 54.0 L176 51.8 L180 49.3 L184 46.5 L188 43.6 L192 40.5 L196 37.3 L200 34.0 L204 30.7 L208 27.5 L212 24.4 L216 21.5 L220 18.7 L224 16.2 L228 14.0 L232 12.0 L236 10.5 L240 9.3 L244 8.5 L248 8.1 L252 8.1 L256 8.5 L260 9.3 L264 10.5 L268 12.0 L272 14.0 L276 16.2 L280 18.7 L284 21.5 L288 24.4 L292 27.5 L296 30.7 L300 34.0 L304 37.3 L308 40.5 L312 43.6 L316 46.5 L320 49.3 L324 51.8 L328 54.0 L332 56.0 L336 57.5 L340 58.7 L344 59.5 L348 59.9 L352 59.9 L356 59.5 L360 58.7 L364 57.5 L368 56.0 L372 54.0 L376 51.8 L380 49.3 L384 46.5 L388 43.6 L392 40.5 L396 37.3 L400 34.0 L404 30.7 L408 27.5 L412 24.4 L416 21.5 L420 18.7 L424 16.2 L428 14.0 L432 12.0 L436 10.5 L440 9.3" fill="none" stroke="#fbbf24" stroke-width="2.6" stroke-linecap="round"/>
-    <line x1="0" y1="34" x2="440" y2="34" stroke="rgba(255,255,255,.10)" stroke-width="1"/>
-    <text x="0" y="86" fill="#6fe3ff" font-weight="700">DIGITAL &#183; the same sound as numbers</text>
-    <g stroke="rgba(34,211,238,.35)" stroke-width="2" stroke-linecap="round"><line x1="0" y1="30" y2="0"/><line x1="14" y1="30" y2="11"/><line x1="28" y1="30" y2="20"/><line x1="42" y1="30" y2="25"/><line x1="56" y1="30" y2="25"/><line x1="70" y1="30" y2="21"/><line x1="84" y1="30" y2="12"/><line x1="98" y1="30" y2="1"/><line x1="112" y1="30" y2="-9"/><line x1="126" y1="30" y2="-18"/><line x1="140" y1="30" y2="-24"/><line x1="154" y1="30" y2="-25"/><line x1="168" y1="30" y2="-21"/><line x1="182" y1="30" y2="-13"/><line x1="196" y1="30" y2="-3"/><line x1="210" y1="30" y2="8"/><line x1="224" y1="30" y2="17"/><line x1="238" y1="30" y2="24"/><line x1="252" y1="30" y2="25"/><line x1="266" y1="30" y2="22"/><line x1="280" y1="30" y2="15"/><line x1="294" y1="30" y2="4"/><line x1="308" y1="30" y2="-6"/><line x1="322" y1="30" y2="-16"/><line x1="336" y1="30" y2="-23"/><line x1="350" y1="30" y2="-26"/><line x1="364" y1="30" y2="-23"/><line x1="378" y1="30" y2="-16"/><line x1="392" y1="30" y2="-6"/><line x1="406" y1="30" y2="4"/><line x1="420" y1="30" y2="15"/><line x1="434" y1="30" y2="22"/></g>
-    <g fill="#22d3ee"><circle cx="0" cy="34.0" r="3"/><circle cx="14" cy="22.9" r="3"/><circle cx="28" cy="14.0" r="3"/><circle cx="42" cy="8.8" r="3"/><circle cx="56" cy="8.5" r="3"/><circle cx="70" cy="13.0" r="3"/><circle cx="84" cy="21.5" r="3"/><circle cx="98" cy="32.4" r="3"/><circle cx="112" cy="43.6" r="3"/><circle cx="126" cy="53.0" r="3"/><circle cx="140" cy="58.7" r="3"/><circle cx="154" cy="59.8" r="3"/><circle cx="168" cy="56.0" r="3"/><circle cx="182" cy="47.9" r="3"/><circle cx="196" cy="37.3" r="3"/><circle cx="210" cy="26.0" r="3"/><circle cx="224" cy="16.2" r="3"/><circle cx="238" cy="9.8" r="3"/><circle cx="252" cy="8.1" r="3"/><circle cx="266" cy="11.2" r="3"/><circle cx="280" cy="18.7" r="3"/><circle cx="294" cy="29.1" r="3"/><circle cx="308" cy="40.5" r="3"/><circle cx="322" cy="50.6" r="3"/><circle cx="336" cy="57.5" r="3"/><circle cx="350" cy="60.0" r="3"/><circle cx="364" cy="57.5" r="3"/><circle cx="378" cy="50.6" r="3"/><circle cx="392" cy="40.5" r="3"/><circle cx="406" cy="29.1" r="3"/><circle cx="420" cy="18.7" r="3"/><circle cx="434" cy="11.2" r="3"/></g>
-    <path d="M0 34.0 L0 34.0 L4 30.7 L8 27.5 L12 24.4 L16 21.5 L20 18.7 L24 16.2 L28 14.0 L32 12.0 L36 10.5 L40 9.3 L44 8.5 L48 8.1 L52 8.1 L56 8.5 L60 9.3 L64 10.5 L68 12.0 L72 14.0 L76 16.2 L80 18.7 L84 21.5 L88 24.4 L92 27.5 L96 30.7 L100 34.0 L104 37.3 L108 40.5 L112 43.6 L116 46.5 L120 49.3 L124 51.8 L128 54.0 L132 56.0 L136 57.5 L140 58.7 L144 59.5 L148 59.9 L152 59.9 L156 59.5 L160 58.7 L164 57.5 L168 56.0 L172 54.0 L176 51.8 L180 49.3 L184 46.5 L188 43.6 L192 40.5 L196 37.3 L200 34.0 L204 30.7 L208 27.5 L212 24.4 L216 21.5 L220 18.7 L224 16.2 L228 14.0 L232 12.0 L236 10.5 L240 9.3 L244 8.5 L248 8.1 L252 8.1 L256 8.5 L260 9.3 L264 10.5 L268 12.0 L272 14.0 L276 16.2 L280 18.7 L284 21.5 L288 24.4 L292 27.5 L296 30.7 L300 34.0 L304 37.3 L308 40.5 L312 43.6 L316 46.5 L320 49.3 L324 51.8 L328 54.0 L332 56.0 L336 57.5 L340 58.7 L344 59.5 L348 59.9 L352 59.9 L356 59.5 L360 58.7 L364 57.5 L368 56.0 L372 54.0 L376 51.8 L380 49.3 L384 46.5 L388 43.6 L392 40.5 L396 37.3 L400 34.0 L404 30.7 L408 27.5 L412 24.4 L416 21.5 L420 18.7 L424 16.2 L428 14.0 L432 12.0 L436 10.5 L440 9.3" fill="none" stroke="rgba(167,139,250,.75)" stroke-width="1.8" stroke-dasharray="4 4"/>
-  </g>
-</svg>
-      </figure>
+
       </div>
       <div class="stack" style="gap:16px">
         <figure class="fig fig--paper" style="height:196px">
