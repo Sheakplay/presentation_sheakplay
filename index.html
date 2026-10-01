@@ -193,14 +193,15 @@ em{color:#6fe3ff;font-style:normal;font-weight:600}
 .card h4{font-size:20px;font-weight:700;margin-bottom:6px;color:#fff}
 .card p{font-size:16.5px;line-height:1.45;color:#a9badb}
 
-/* slide 18 — smaller cards, larger text inside */
+/* slide 18 — cards moved down from the title, bigger text inside */
 #s6 .card:last-child{grid-column:span 2}
 
-#s18 .cards{grid-auto-rows:min-content}
-#s18 .card{padding:20px 22px;gap:15px;align-items:center}
-#s18 .card .ic{width:44px;height:44px;border-radius:12px}
-#s18 .card h4{font-size:22px;margin-bottom:7px}
-#s18 .card p{font-size:18.5px;line-height:1.5;color:#b3c3e0}
+#s18 .cards{grid-template-rows:1fr 1fr;margin-top:34px;margin-bottom:6px}
+#s18 .card{padding:22px 26px;gap:20px;align-items:center}
+#s18 .card .ic{width:58px;height:58px;border-radius:15px}
+#s18 .card .ic svg{width:30px;height:30px}
+#s18 .card h4{font-size:29px;line-height:1.15;margin-bottom:10px}
+#s18 .card p{font-size:23px;line-height:1.45;color:#c3d0e8}
 /* slide 19: five cards, balanced 3 + 2 */
 .cards.s19{grid-template-columns:repeat(6,1fr);grid-auto-rows:min-content;gap:24px;align-content:center}
 .cards.s19 .card{padding:28px 30px;align-items:center}
@@ -254,12 +255,24 @@ em{color:#6fe3ff;font-style:normal;font-weight:600}
 .dev.good .lbl{color:#6ee7b7}
 
 /* history slides: 2 x 2 card grid so nothing ever overflows */
-.devgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-content:center;height:100%}
-.devgrid .dev{padding:20px 23px;border-radius:18px}
+.devgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-content:center;height:calc(100% - 26px);margin-top:26px}
+.devgrid .dev{padding:17px 22px;border-radius:18px}
 .devgrid .lbl{font-size:12.5px;margin-bottom:8px;letter-spacing:.2em}
-.devgrid p{font-size:18px;line-height:1.48}
+.devgrid p{font-size:17.5px;line-height:1.45}
 .devgrid .span2{grid-column:span 2}
 .devgrid + .chips{margin-top:14px}
+
+
+/* slide 10: shellac -> vinyl explainer */
+.devgrid .dev.rpm{padding:15px 22px}
+.devgrid .dev.rpm p{font-size:16.5px;line-height:1.4}
+.rpm .steps{display:flex;align-items:stretch;gap:8px;margin-top:10px}
+.rpm .st{flex:1;border-radius:12px;padding:9px 8px;text-align:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);display:flex;flex-direction:column;gap:2px}
+.rpm .st b{font-size:22px;color:#6fe3ff;line-height:1.1}
+.rpm .st span{font-size:15px;font-weight:700;color:#fff}
+.rpm .st i{font-style:normal;font-size:13.5px;color:#9db0d2;line-height:1.25}
+.rpm .ar{align-self:center;font-size:22px;color:#6fe3ff;font-weight:800}
+.rpm .takeaway{margin-top:9px;font-size:16.5px;color:#cfdcf6;text-align:center}
 
 /* ---------- title slide ---------- */
 #s1{justify-content:center;padding:0 96px}
@@ -302,7 +315,9 @@ em{color:#6fe3ff;font-style:normal;font-weight:600}
 #wm .wm-name{font-size:14px;font-weight:800;letter-spacing:.005em;color:rgba(159,179,214,.92)}
 #wm .wm-school{font-size:10.5px;font-weight:600;letter-spacing:.05em;color:rgba(92,111,150,.95);margin-top:4px}
 
-#brand{position:absolute;left:66px;bottom:26px;z-index:5;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:#54658a;font-weight:700}
+#brand{position:absolute;left:66px;bottom:26px;z-index:5;transition:opacity .3s;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:#54658a;font-weight:700}
+
+#brand.off{opacity:0;pointer-events:none}
 
 /* ---------- click zones ---------- */
 .zone{position:absolute;top:0;bottom:0;width:17%;z-index:20;cursor:pointer;display:grid;place-items:center;opacity:0;transition:opacity .2s}
@@ -441,7 +456,7 @@ em{color:#6fe3ff;font-style:normal;font-weight:600}
   <rect x="2" y="2" width="596" height="316" rx="18" fill="rgba(255,255,255,.028)" stroke="rgba(255,255,255,.09)"/>
   <g font-family="Segoe UI, system-ui, sans-serif" font-size="14" fill="#c9d6f2" text-anchor="middle">
     <!-- 1 loudspeaker -->
-    <g transform="translate(70,150)">
+    <g transform="translate(56,150)">
       <rect x="-25" y="-42" width="50" height="84" rx="9" fill="rgba(34,211,238,.08)" stroke="#6fe3ff" stroke-width="2.4"/>
       <rect x="-13" y="-27" width="26" height="54" rx="5" fill="none" stroke="#6fe3ff" stroke-width="2"/>
       <circle cx="0" cy="0" r="8.5" fill="#6fe3ff" opacity=".85"/>
@@ -451,24 +466,41 @@ em{color:#6fe3ff;font-style:normal;font-weight:600}
       <text y="106" fill="#8ea0c4" font-size="12.5">an object moves</text>
     </g>
     <!-- waves -->
-    <g transform="translate(200,150)" fill="none" stroke-linecap="round">
+    <g transform="translate(190,150)" fill="none" stroke-linecap="round">
       <path d="M-42 0 q10 -17 20 0 t20 0" stroke="#22d3ee" stroke-width="2.6"/>
       <path d="M-42 0 q15 -30 30 0 t30 0" stroke="#4fb6f0" stroke-width="2.4" opacity=".72" transform="translate(-1,0)"/>
       <path d="M-42 0 q21 -44 42 0 t42 0" stroke="#a78bfa" stroke-width="2.2" opacity=".45"/>
       <text y="86" fill="#6fe3ff" font-weight="700" stroke="none" fill-opacity="1">2 &#183; Sound wave</text>
       <text y="106" fill="#8ea0c4" font-size="12.5" stroke="none">travels through air</text>
     </g>
-    <!-- ear -->
-    <g transform="translate(345,140) scale(.92)">
-      <path d="M6 -58 c-24 0 -38 20 -38 46 c0 24 11 40 20 55 c7 12 9 24 2 31 c-6 6 -3 15 6 15 c16 0 27 -14 27 -30 c0 -20 -12 -29 -12 -50 c0 -13 12 -22 12 -36 c0 -16 -7 -31 -17 -31 z"
-            fill="rgba(34,211,238,.07)" stroke="#6fe3ff" stroke-width="2.6" stroke-linejoin="round"/>
-      <path d="M6 -30 c13 3 18 14 18 27 c0 13 -7 20 -14 24" fill="none" stroke="#a78bfa" stroke-width="2.2" stroke-linecap="round"/>
-      <path d="M8 16 c12 0 17 6 17 14" fill="none" stroke="#a78bfa" stroke-width="2.2" stroke-linecap="round"/>
-      <text y="114" fill="#6fe3ff" font-weight="700">3 &#183; Eardrum</text>
-      <text y="132" fill="#8ea0c4" font-size="12.5">membrane vibrates</text>
+    <!-- ear (cross-section: outer ear -> canal -> eardrum -> middle ear -> cochlea) -->
+    <g transform="translate(348,150)">
+      <g transform="scale(1.2)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <!-- inside of the head -->
+        <rect x="-22" y="-38" width="86" height="84" rx="24" fill="rgba(167,139,250,.05)" stroke="rgba(255,255,255,.16)" stroke-width="1.6"/>
+        <!-- outer ear (auricle) -->
+        <path d="M-22 -12 C-30 -16 -36 -30 -42 -42 C-50 -56 -72 -50 -68 -26 C-66 -10 -62 6 -58 20 C-54 36 -40 44 -30 34 C-25 28 -23 18 -22 12"
+              fill="rgba(34,211,238,.10)" stroke="#6fe3ff" stroke-width="2.6"/>
+        <path d="M-52 -34 C-60 -26 -54 -10 -43 -6" stroke="#6fe3ff" stroke-width="2" opacity=".75"/>
+        <!-- ear canal -->
+        <path d="M-22 -10 H12 M-22 10 H12" stroke="#6fe3ff" stroke-width="2.6"/>
+        <!-- sound entering the canal -->
+        <path d="M-46 0 h13 M-38 -5 l5 5 -5 5" stroke="#22d3ee" stroke-width="2.2"/>
+        <!-- eardrum (the membrane) -->
+        <path d="M12 -17 Q21 0 12 17" stroke="#a78bfa" stroke-width="5"/>
+        <path d="M18 -10 Q22 0 18 10" stroke="#c4b5fd" stroke-width="1.6" opacity=".6"/>
+        <!-- tiny middle-ear bones -->
+        <path d="M22 0 H33 L38 8" stroke="#a78bfa" stroke-width="2.2"/>
+        <circle cx="33" cy="0" r="3" fill="#a78bfa" stroke="none"/>
+        <circle cx="38" cy="9" r="3" fill="#a78bfa" stroke="none"/>
+        <!-- cochlea -->
+        <path d="M50 22 a2.5 2.5 0 1 1 2.5 2.5 a6.5 6.5 0 1 1 -6.5 -6.5 a10.5 10.5 0 1 1 10.5 10.5" stroke="#c4b5fd" stroke-width="2.2" transform="translate(-4,-2)"/>
+      </g>
+      <text y="86" fill="#6fe3ff" font-weight="700" stroke="none" text-anchor="middle">3 &#183; Eardrum</text>
+      <text y="106" fill="#8ea0c4" font-size="12.5" stroke="none" text-anchor="middle">membrane vibrates</text>
     </g>
     <!-- brain -->
-    <g transform="translate(500,150)">
+    <g transform="translate(528,150)">
       <circle cx="0" cy="0" r="38" fill="rgba(167,139,250,.09)" stroke="#a78bfa" stroke-width="2.4"/>
       <path d="M-20 -4 q7 -13 14 0 t14 0" fill="none" stroke="#c4b5fd" stroke-width="2.2" stroke-linecap="round"/>
       <path d="M-18 12 q7 11 14 0 t14 0" fill="none" stroke="#c4b5fd" stroke-width="2.2" stroke-linecap="round"/>
@@ -478,9 +510,9 @@ em{color:#6fe3ff;font-style:normal;font-weight:600}
     </g>
     <!-- connectors -->
     <g stroke="#4a5b80" stroke-width="2" fill="none" stroke-linecap="round">
-      <path d="M104 150 h44" marker-end="url(#ar2)"/>
-      <path d="M254 150 h44" marker-end="url(#ar2)"/>
-      <path d="M404 150 h50" marker-end="url(#ar2)"/>
+      <path d="M92 150 h40" marker-end="url(#ar2)"/>
+      <path d="M238 150 h22" marker-end="url(#ar2)"/>
+      <path d="M428 150 h52" marker-end="url(#ar2)"/>
     </g>
   </g>
   <defs>
@@ -662,9 +694,17 @@ em{color:#6fe3ff;font-style:normal;font-weight:600}
           <div class="lbl">Why discs won</div>
           <p>The recording was cut as a <b>zig-zag groove</b> in the surface. A disc is easy to reproduce in <b>large quantities</b> — perfect for selling music to the public.</p>
         </div>
-        <div class="dev span2">
+        <div class="dev span2 rpm">
           <div class="lbl">From shellac to vinyl</div>
-          <p>By the early 20th century discs dominated recorded music. <b>Shellac</b> records were replaced by <b>vinyl</b>, and new speeds followed: <b>78 rpm</b> → <b>45 rpm singles</b> → <b>33⅓ rpm LPs</b>.</p>
+          <p><b>Shellac</b> is a hard material that breaks easily. Later, records were made of <b>vinyl</b> &mdash; a tougher plastic. <b>rpm</b> means <em>revolutions per minute</em>: how many times the record spins around in one minute.</p>
+          <div class="steps">
+            <div class="st"><b>78 rpm</b><span>Shellac discs</span><i>about 3 minutes of music</i></div>
+            <div class="ar">&rarr;</div>
+            <div class="st"><b>45 rpm</b><span>Vinyl &ldquo;singles&rdquo;</span><i>one song per side</i></div>
+            <div class="ar">&rarr;</div>
+            <div class="st"><b>33&#8531; rpm</b><span>Vinyl LPs</span><i>a whole album</i></div>
+          </div>
+          <div class="takeaway">Slower spin + finer groove = <b>more music on one disc</b>.</div>
         </div>
       </div>
       <div class="stack" style="gap:16px">
@@ -882,7 +922,7 @@ em{color:#6fe3ff;font-style:normal;font-weight:600}
   <section class="slide" id="s18" data-title="Benefits of Audio">
     <div class="kicker">Part 3</div>
     <h2>Benefits of <span class="yr">Audio</span></h2>
-    <div class="cards g4" style="flex:1;align-content:center;gap:18px 20px">
+    <div class="cards g4" style="flex:1;gap:20px 22px">
       <div class="card">
         <div class="ic"><svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 016.5 3H19v15H6.5A2.5 2.5 0 004 20.5z"/><path d="M4 5.5v15"/><path d="M9 7h6"/></svg></div>
         <div><h4>Information without a screen</h4><p>Audiobooks and podcasts let people absorb information without constantly looking at a display.</p></div>
@@ -993,6 +1033,7 @@ em{color:#6fe3ff;font-style:normal;font-weight:600}
   var ov      = document.getElementById('ov');
   var ovgrid  = document.getElementById('ovgrid');
   var fsLabel = document.getElementById('fsLabel');
+  var brandEl = document.getElementById('brand');
   var total   = slides.length;
   var i = 0;
 
@@ -1102,6 +1143,7 @@ em{color:#6fe3ff;font-style:normal;font-weight:600}
     leaveTimer = setTimeout(finishLeave, 900);
 
     i = n;
+    brandEl.classList.toggle('off', i !== 0);
     bar.style.width = ((i + 1) / total * 100) + '%';
     counter.innerHTML = String(i + 1).padStart(2,'0') + ' <small>/ ' + total + '</small>';
     counter.classList.remove('bump');
@@ -1193,6 +1235,7 @@ em{color:#6fe3ff;font-style:normal;font-weight:600}
 
   /* ---------- boot ---------- */
   slides[0].classList.add('is-active');
+  brandEl.classList.remove('off');
   bar.style.width = (1 / total * 100) + '%';
   counter.innerHTML = '01 <small>/ ' + total + '</small>';
   markOv();
